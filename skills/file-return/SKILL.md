@@ -106,6 +106,26 @@ output.
      broker tax P&L reports (Zerodha, Groww, etc.) already apply this when
      they label a line "LTCG" — but ask the user to confirm for any
      pre-2018 holding rather than assuming the broker number is right.
+   - House property: ask directly whether they own any house property (Form
+     16/AIS won't reliably surface this). For each property, ask
+     self-occupied vs let-out (up to 2 self-occupied properties are
+     supported per s.21(7)(a); a 3rd+ is excluded with a warning rather than
+     guessed), and for let-out properties the annual rent received and
+     municipal taxes paid. For every property ask the interest paid on the
+     housing loan, whether the loan was taken after 1999 for
+     acquisition/construction completed within 5 years (this picks the
+     ₹200,000 vs ₹30,000 self-occupied interest cap, s.22(2)(a)/(b)), and
+     last year's carried-forward house-property loss if any (the engine is
+     stateless year-to-year, so it can't look this up itself). Build
+     `tax_engine.models.HouseProperty` entries into `TaxInput.house_properties`.
+   - NPS: ask whether the user made an additional NPS self-contribution
+     beyond what's routed through Section 80C (`TaxInput.deductions_nps_self`,
+     capped at ₹50,000, old regime only — s.124(3)/(4)) and whether their
+     employer makes an NPS contribution (`TaxInput.nps_employer_contribution`,
+     allowed in both regimes — s.124(1)/(2)). If there's an employer
+     contribution, also ask whether the employer is government or private
+     (`TaxInput.is_government_employer`) since this changes the deduction
+     cap.
 
    Write the extracted data to `./itr-filing/TY2026-27/extracted-data.json`
    in this directory's working tree (create the directory if needed).
@@ -123,16 +143,23 @@ output.
      resulting `balance_payable` stated plainly as either "additional tax of
      ₹X is due" (positive) or "refund of ₹X expected" (negative) — this is
      the number the user actually cares about, not just the gross liability.
+   - The surcharge amount for the recommended regime (`RegimeResult.surcharge`),
+     stated as a separate line from the base slab/capital-gains tax so the
+     user can see it — it only applies above Rs. 50 lakh total income.
    - Every warning returned in `RegimeResult.warnings` (e.g. unset-off
-     capital losses) presented clearly to the user.
+     capital losses, or an unverifiable surcharge marginal-relief case near a
+     Rs. 50L/1Cr/2Cr/5Cr threshold) presented clearly to the user.
    - Any AIS-vs-Form16/PnL mismatches you noticed during extraction, listed
      explicitly — never silently reconcile these; ask the user to resolve
      them.
-   - If Form 16 shows an employer NPS contribution deduction or Agniveer
-     Corpus Fund contribution, flag explicitly that `tax_engine` v1 doesn't
-     model these (no `TaxInput` field exists for them yet) and the computed
-     numbers omit that deduction under both regimes — don't silently drop it
-     from the report.
+   - House property income/loss for the recommended regime
+     (`RegimeResult.house_property_income`) and the NPS deduction actually
+     allowed (`RegimeResult.nps_deduction`) — show the user what was claimed
+     vs what was allowed if either got capped.
+   - If Form 16 shows an Agniveer Corpus Fund contribution, flag explicitly
+     that `tax_engine` v1 doesn't model this (no `TaxInput` field exists for
+     it yet) and the computed numbers omit that deduction under both
+     regimes — don't silently drop it from the report.
 
 5. **Portal checklist.** Using `reference/portal_navigation_guide.md`,
    write `./itr-filing/TY2026-27/portal-checklist.md` mapping each
@@ -142,8 +169,9 @@ output.
 ## Hard rules
 
 - Never call yourself a substitute for a CA for complex situations (business
-  income, foreign assets, multiple house properties, etc. are out of scope
-  for v1 — tell the user to seek professional help for those).
+  income, foreign assets, a 3rd+ self-occupied property, vacancy/unrealised
+  rent adjustments, etc. are out of scope for v1 — tell the user to seek
+  professional help for those).
 - Never submit or attempt to submit anything to the portal.
 - Always surface `tax_engine` warnings to the user rather than absorbing
   them silently.

@@ -49,7 +49,40 @@
     "vda_rate": 0.30,
     "source_section": "Income-tax Act 2025 sections 196(1) [equity STCG], 198(2) [equity LTCG + 1.25L exemption], 197(1) [general LTCG], 197(3) [land/building grandfathering], 194 Table Sl.No.4 [virtual digital assets]"
   },
+  "surcharge": {
+    "special_rate_cap": 0.15,
+    "old_regime_brackets": [
+      {"upto": 5000000, "rate": 0.0},
+      {"upto": 10000000, "rate": 0.10},
+      {"upto": 20000000, "rate": 0.15},
+      {"upto": 50000000, "rate": 0.25},
+      {"upto": null, "rate": 0.37}
+    ],
+    "new_regime_brackets": [
+      {"upto": 5000000, "rate": 0.0},
+      {"upto": 10000000, "rate": 0.10},
+      {"upto": 20000000, "rate": 0.15},
+      {"upto": null, "rate": 0.25}
+    ],
+    "source_section": null,
+    "note": "Surcharge rate is not in the Act text -- s.7974 only says tax 'shall be increased by a surcharge, if any, levied by any Central Act', deferring the rate to the annual Finance Act, same pattern as old-regime slabs and cess_rate above. Brackets and the 15% cap on equity STT STCG/LTCG and general/land-building LTCG (s.196/198/197) -- and the new regime's 25% ceiling with no 37% slab -- are carried over from established Finance Act convention (FY2023-24 onward) and must be reconfirmed against the actual Finance Act for TY2026-27. VDA/crypto gains (s.194 Table Sl.No.4) are NOT covered by the 15% cap and are surcharged at the ordinary bracket rate."
+  },
+  "house_property": {
+    "self_occupied_interest_cap_post_1999": 200000,
+    "self_occupied_interest_cap_other": 30000,
+    "let_out_standard_deduction_rate": 0.30,
+    "loss_set_off_cap_old_regime": 200000,
+    "max_self_occupied_properties": 2,
+    "source_section": "Income-tax Act 2025 ss.20-25 [house property income], 22(1)/(2) [deductions & self-occupied interest cap], 109(1)(b) [Rs.2L set-off cap, old regime], 110 [carry-forward], 202(2)(a)(v) [new regime disallows self-occupied interest deduction], 202(2)(b)(ii) [new regime blocks HP loss set-off against other heads]"
+  },
+  "nps": {
+    "self_contribution_limit": 50000,
+    "employer_contribution_cap_govt": 0.14,
+    "employer_contribution_cap_private_old_regime": 0.10,
+    "employer_contribution_cap_new_regime": 0.14,
+    "source_section": "Income-tax Act 2025 s.124(1)-(4) [employer & self NPS contribution deductions], 202(2)(a)(xii) [new regime exception preserving s.124(1)/(2)]"
+  },
   "cess_rate": 0.04,
   "cess_source_section": null,
-  "cess_note": "Health & Education Cess rate is set by the annual Finance Act and is not present in the Act text; 4% is carried over from established convention."
+  "cess_note": "Health & Education Cess rate is set by the annual Finance Act and is not present in the Act text; 4% is carried over from established convention. Cess is levied on income-tax plus surcharge."
 }

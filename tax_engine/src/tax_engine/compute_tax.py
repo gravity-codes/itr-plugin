@@ -1,36 +1,49 @@
 from tax_engine.capital_gains import compute_capital_gains_tax
+from tax_engine.house_property import compute_house_property_income
 from tax_engine.models import ComparisonResult, RegimeResult, TaxInput
-
-
-def compute_slab_tax(taxable_income: float, slabs: list[dict]) -> float:
-    tax = 0.0
-    lower_bound = 0.0
-    for slab in slabs:
-        upper_bound = slab["upto"] if slab["upto"] is not None else float("inf")
-        if taxable_income <= lower_bound:
-            break
-        slab_amount = min(taxable_income, upper_bound) - lower_bound
-        tax += slab_amount * slab["rate"]
-        lower_bound = upper_bound
-    return tax
+from tax_engine.slabs import compute_slab_tax
+from tax_engine.surcharge import compute_surcharge
 
 
 def compute_regime(
     tax_input: TaxInput,
     regime: str,
     rules: dict,
-    cg_result: tuple[float, float, float, list[str]] | None = None,
+    cg_result: tuple[float, float, float, float, list[str]] | None = None,
 ) -> RegimeResult:
     regime_rules = rules[f"{regime}_regime"]
     if cg_result is None:
         cg_result = compute_capital_gains_tax(tax_input.capital_gains, rules["capital_gains"])
-    cg_tax, cg_income, slab_taxable_gains, warnings = cg_result
+    cg_tax, cg_income, slab_taxable_gains, vda_tax, warnings = cg_result
+    capped_cg_tax = cg_tax - vda_tax
+
+    house_property_income, hp_warnings = compute_house_property_income(
+        tax_input.house_properties, regime, rules
+    )
+    warnings = warnings + hp_warnings
 
     standard_deduction = min(regime_rules["standard_deduction"], tax_input.salary_gross)
     taxable_income = max(
         0.0,
-        tax_input.salary_gross - standard_deduction + tax_input.other_income + slab_taxable_gains,
+        tax_input.salary_gross
+        - standard_deduction
+        + tax_input.other_income
+        + slab_taxable_gains
+        + house_property_income,
     )
+
+    nps_employer_cap_rate = (
+        rules["nps"]["employer_contribution_cap_govt"]
+        if tax_input.is_government_employer
+        else rules["nps"][
+            f"employer_contribution_cap_{'private_old_regime' if regime == 'old' else 'new_regime'}"
+        ]
+    )
+    nps_employer_deduction = min(
+        tax_input.nps_employer_contribution, nps_employer_cap_rate * tax_input.salary_gross
+    )
+    nps_deduction = nps_employer_deduction
+    taxable_income = max(0.0, taxable_income - nps_employer_deduction)
 
     if regime == "old":
         deduction_80c = min(tax_input.deductions_80c, regime_rules["deduction_80c_limit"])
@@ -40,7 +53,13 @@ def compute_regime(
             else regime_rules["deduction_80d_self_limit"]
         )
         deduction_80d = min(tax_input.deductions_80d, d80d_limit)
-        taxable_income = max(0.0, taxable_income - deduction_80c - deduction_80d)
+        nps_self_deduction = min(
+            tax_input.deductions_nps_self, rules["nps"]["self_contribution_limit"]
+        )
+        nps_deduction += nps_self_deduction
+        taxable_income = max(
+            0.0, taxable_income - deduction_80c - deduction_80d - nps_self_deduction
+        )
 
     if regime == "old" and tax_input.is_senior_citizen:
         slabs = regime_rules["slabs_senior_citizen"]
@@ -52,7 +71,17 @@ def compute_regime(
     rebate = _compute_rebate(slab_tax, total_income_for_rebate_check, regime_rules)
 
     slab_tax_after_rebate = max(0.0, slab_tax - rebate)
-    tax_before_cess = slab_tax_after_rebate + cg_tax
+    surcharge, surcharge_warnings = compute_surcharge(
+        slab_tax_after_rebate,
+        taxable_income,
+        vda_tax,
+        capped_cg_tax,
+        total_income_for_rebate_check,
+        slabs,
+        rules["surcharge"],
+        regime,
+    )
+    tax_before_cess = slab_tax_after_rebate + cg_tax + surcharge
     cess = tax_before_cess * rules["cess_rate"]
     total_tax = tax_before_cess + cess
 
@@ -62,11 +91,14 @@ def compute_regime(
         slab_tax=slab_tax,
         capital_gains_tax=cg_tax,
         rebate=rebate,
+        surcharge=surcharge,
         cess=cess,
         total_tax=total_tax,
         tds_paid=tax_input.tds_paid,
         balance_payable=total_tax - tax_input.tds_paid,
-        warnings=warnings,
+        house_property_income=house_property_income,
+        nps_deduction=nps_deduction,
+        warnings=warnings + surcharge_warnings,
     )
 
 

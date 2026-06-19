@@ -19,6 +19,16 @@ class CapitalGainEntry:
 
 
 @dataclass(frozen=True)
+class HouseProperty:
+    is_self_occupied: bool
+    annual_rent_received: float = 0.0
+    municipal_taxes_paid: float = 0.0
+    interest_paid: float = 0.0
+    loan_post_1999_for_acquisition: bool = True
+    carried_forward_loss: float = 0.0
+
+
+@dataclass(frozen=True)
 class TaxInput:
     salary_gross: float
     other_income: float
@@ -27,6 +37,10 @@ class TaxInput:
     deductions_80d: float = 0.0
     is_senior_citizen: bool = False
     tds_paid: float = 0.0
+    house_properties: list[HouseProperty] = field(default_factory=list)
+    deductions_nps_self: float = 0.0
+    nps_employer_contribution: float = 0.0
+    is_government_employer: bool = False
 
 
 @dataclass(frozen=True)
@@ -36,10 +50,13 @@ class RegimeResult:
     slab_tax: float
     capital_gains_tax: float
     rebate: float
+    surcharge: float
     cess: float
     total_tax: float
     tds_paid: float
     balance_payable: float
+    house_property_income: float = 0.0
+    nps_deduction: float = 0.0
     warnings: list[str] = field(default_factory=list)
 
 

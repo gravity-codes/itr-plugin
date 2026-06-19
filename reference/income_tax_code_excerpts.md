@@ -64,6 +64,45 @@ above 24L: 30%.
   basis); it is a distinct mechanism from the land/building rate-choice
   grandfathering in s.197(3) above.
 
+## House property income (ss.20-25)
+- s.20, s.21: house property income head = annual value minus deductions.
+- s.21(6), s.21(7)(a): self-occupied annual value is nil, for up to 2
+  properties; a 3rd+ self-occupied property is excluded from `tax_engine`
+  with a warning rather than guessing a notional rent for it.
+- s.22(1)(a): let-out standard deduction is 30% of (rent minus municipal
+  taxes).
+- s.22(1)(b)/(c): let-out interest deduction is uncapped.
+- s.22(2)(a)/(b): self-occupied interest deduction is capped at Rs. 2,00,000
+  (loan taken after 1 April 1999 for acquisition/construction completed
+  within 5 years) or Rs. 30,000 otherwise.
+- s.109(1)(b): old regime caps cross-head set-off of a house-property loss
+  at Rs. 2,00,000 per year; any excess is carried forward (s.110(1)) to
+  offset future house-property income only. `tax_engine` is stateless
+  year-to-year, so the user supplies last year's carried-forward figure as
+  an input (`HouseProperty.carried_forward_loss`) and this year's unabsorbed
+  amount is reported back as a warning to carry forward next year.
+- s.202(2)(a)(v): new regime disallows the self-occupied interest deduction
+  entirely.
+- s.202(2)(b)(ii): new regime blocks house-property loss from cross-head
+  set-off entirely — any loss is fully carried forward, none of it usable
+  in the year it arises.
+- Not modeled in v1: the s.21(1) "higher of expected-to-let value or actual
+  rent" test for let-out annual value (the user supplies actual rent
+  received directly), and vacancy/unrealised-rent adjustments (ss.21(2),
+  23).
+
+## NPS deductions (s.124)
+- s.124(3)/(4): the individual's own additional NPS contribution (the
+  "80CCD(1B)" equivalent) is deductible up to Rs. 50,000, old regime only.
+- s.124(1)/(2): employer NPS contribution is deductible in both regimes,
+  capped at 14% of salary for a government employer, 10% for a private
+  employer in the old regime, and 14% for a private employer in the new
+  regime (the new regime's higher private-employer cap is itself part of
+  s.124(2)).
+- s.202(2)(a)(xii): the new regime's general disallowance of Chapter VIII
+  deductions carves out an exception preserving the employer NPS deduction
+  above.
+
 ## Old-regime basic exemption and slab rates
 Not specified in the Act text — it defers these to the annual Finance Act.
 This plugin uses the established-convention figures (Rs. 2,50,000 basic
@@ -76,22 +115,38 @@ raise in real practice but that age tier is out of scope for v1 — there's no
 separate flag for it. Reconfirm all of these against the actual Finance Act
 for the filing year before relying on this for a real filing.
 
+## Surcharge (relevant above Rs. 50 lakh total income)
+- Not specified in the Act text — s.7974 only says tax "shall be increased
+  by a surcharge, if any, levied by any Central Act," deferring the rate to
+  the annual Finance Act, the same pattern as old-regime slabs/cess above.
+  `tax_engine.surcharge` implements the established Finance Act convention
+  (FY2023-24 onward): 10%/15%/25% bands at Rs. 50L/1Cr/2Cr total income, a
+  further 37% band above Rs. 5Cr in the old regime only (the new regime caps
+  surcharge at 25%, with no 37% band), and a 15% cap on the surcharge rate
+  applied to equity STT STCG/LTCG and general/land-building LTCG tax (ss.
+  196/198/197) even when the slab-income rate is higher. VDA/crypto tax (s.
+  194 Table Sl.No.4) is *not* covered by that 15% cap. Reconfirm all rates
+  against the actual Finance Act for TY2026-27 before relying on this.
+- Marginal relief is applied at each bracket boundary by reducing the
+  slab-taxed portion of income first. If capital-gains tax alone exceeds the
+  slab-taxed tax near a threshold (e.g. near-zero salary, large LTCG just
+  over Rs. 50L), `tax_engine` can't fully verify relief and returns a
+  warning instead of guessing — flag this to the user and recommend a CA
+  check in that band.
+
 ## Known v1 simplifications
 - No cross-bucket capital-loss set-off (e.g. a short-term equity loss is not
   applied against a long-term equity gain). Each asset-class/term bucket is
   netted independently; an unset-off loss is reported as a warning.
 - The s.87A-equivalent rebate (ss.156(1)/(2)) is applied only against
   slab-taxed income tax, never against capital-gains tax, even though the
-  threshold check uses total income (slab income + capital gains) per the
-  literal text. This is a conservative simplification given genuine
-  ambiguity in how the rebate interacts with special-rate capital gains.
-- No surcharge computation (relevant only above Rs. 50 lakh total income).
-  Flag to the user if their income exceeds that threshold.
-- Employer/government pension-scheme contributions deductible under s.124(1),
-  124(2), 125(2), and 146 are the only Chapter VIII items s.202(2)(a)(xii)
-  still allows under the *new* regime (per s.202(2)(a)(xii) itself) — but
-  `TaxInput` has no field for them, so they're omitted from both regimes'
-  computations, not just the new regime's. This understates deductions
-  equally for both regimes rather than skewing the old-vs-new comparison;
-  flag it to users who have such contributions rather than silently omitting
-  it from the report.
+  threshold check uses total income (slab income + capital gains, with
+  equity LTCG counted net of the Rs. 1,25,000 exemption since that exemption
+  reduces income chargeable to tax under the Act) per the literal text. This
+  is a conservative simplification given genuine ambiguity in how the rebate
+  interacts with special-rate capital gains.
+- Government-employee pension-scheme contributions deductible under
+  s.125(2) and s.146 (distinct from the s.124 NPS contributions
+  `tax_engine` does model) have no `TaxInput` field — they're omitted from
+  both regimes' computations equally, rather than skewing the old-vs-new
+  comparison; flag it to affected users rather than silently omitting it.

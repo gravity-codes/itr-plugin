@@ -3,11 +3,18 @@ from tax_engine.models import AssetClass, CapitalGainEntry
 
 def compute_capital_gains_tax(
     entries: list[CapitalGainEntry], rules: dict
-) -> tuple[float, float, float, list[str]]:
-    """Returns (special_rate_tax, special_rate_income, slab_taxable_gains, warnings).
+) -> tuple[float, float, float, float, list[str]]:
+    """Returns (special_rate_tax, special_rate_income, slab_taxable_gains, vda_tax, warnings).
 
     `special_rate_tax`/`special_rate_income` cover gains that have a dedicated
     rate under the Act (equity STT STCG/LTCG, general/land-building LTCG, VDA).
+    `special_rate_income` is income *chargeable* to tax -- i.e. net of the
+    equity LTCG exemption (s.198(2)) -- not the gross gain, since its only
+    consumer (the s.156 rebate threshold check) needs total income as
+    computed under the Act, not the pre-exemption figure.
+    `vda_tax` is the subset of `special_rate_tax` from VDA/crypto gains,
+    broken out separately because it does not get the 15% surcharge cap that
+    equity STT and general/land-building gains get (see rules['surcharge']).
     `slab_taxable_gains` covers short-term gains on non-equity-STT assets
     (debt funds, unlisted shares, land/building held under 24 months), which
     the Act gives no special rate for -- they're ordinary income taxed at
@@ -18,6 +25,7 @@ def compute_capital_gains_tax(
     special_rate_tax = 0.0
     special_rate_income = 0.0
     slab_taxable_gains = 0.0
+    vda_tax = 0.0
 
     for asset_class in AssetClass:
         for is_long_term in (True, False):
@@ -38,8 +46,10 @@ def compute_capital_gains_tax(
                             "and cannot be carried forward (Income-tax Act 2025, s.194 Table Sl.No.4)."
                         )
                         continue
+                    entry_tax = entry.gain * rules["vda_rate"]
                     special_rate_income += entry.gain
-                    special_rate_tax += entry.gain * rules["vda_rate"]
+                    special_rate_tax += entry_tax
+                    vda_tax += entry_tax
                 continue
 
             net_gain = sum(e.gain for e in bucket)
@@ -54,7 +64,7 @@ def compute_capital_gains_tax(
 
             if asset_class == AssetClass.EQUITY_STT and is_long_term:
                 taxable = max(0.0, net_gain - rules["equity_stt_ltcg_exemption"])
-                special_rate_income += net_gain
+                special_rate_income += taxable
                 special_rate_tax += taxable * rules["equity_stt_ltcg_rate"]
             elif asset_class == AssetClass.EQUITY_STT and not is_long_term:
                 special_rate_income += net_gain
@@ -71,7 +81,7 @@ def compute_capital_gains_tax(
                 # ordinary income taxed at slab rates.
                 slab_taxable_gains += net_gain
 
-    return special_rate_tax, special_rate_income, slab_taxable_gains, warnings
+    return special_rate_tax, special_rate_income, slab_taxable_gains, vda_tax, warnings
 
 
 def _land_building_tax(bucket: list[CapitalGainEntry], rules: dict) -> float:
