@@ -66,19 +66,16 @@ Then start a conversation and ask to file your ITR — Claude will use the
 
 This skill is self-contained under `skills/file-return/` — `tax_engine` and
 the reference docs it needs live inside that folder, with no dependency on
-anything elsewhere in this repo.
+anything elsewhere in this repo. Available on every plan (free, Pro, Max,
+Team, Enterprise).
 
-1. Clone or download this repo.
-2. Zip the `skills/file-return/` folder (the zip's root should be the
-   `file-return` folder itself, containing `SKILL.md`, `tax_engine/`, and
-   `reference/`).
-3. Upload it as a custom skill via Claude Desktop/claude.ai's skill
-   settings.
-
-> **Note:** the exact custom-skill upload UI and any plan-tier
-> restrictions (e.g. Pro/Max/Team/Enterprise) weren't independently
-> verified while building this — if step 3 doesn't match what you see in
-> your client, check Anthropic's current Agent Skills documentation.
+1. On this repo's GitHub page, click **Code → Download ZIP** (GitHub's own
+   download, not a third-party link) and unzip it.
+2. Re-zip just the `skills/file-return` folder on its own — the zip's root
+   should be the `file-return` folder itself, containing `SKILL.md`,
+   `tax_engine/`, and `reference/`.
+3. In Claude Desktop/claude.ai, go to **Settings → Capabilities → Skills →
+   "+" → Create skill** and upload that zip.
 
 ## How it works
 
