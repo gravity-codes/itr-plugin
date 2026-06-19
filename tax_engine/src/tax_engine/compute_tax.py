@@ -15,11 +15,16 @@ def compute_slab_tax(taxable_income: float, slabs: list[dict]) -> float:
     return tax
 
 
-def compute_regime(tax_input: TaxInput, regime: str, rules: dict) -> RegimeResult:
+def compute_regime(
+    tax_input: TaxInput,
+    regime: str,
+    rules: dict,
+    cg_result: tuple[float, float, float, list[str]] | None = None,
+) -> RegimeResult:
     regime_rules = rules[f"{regime}_regime"]
-    cg_tax, cg_income, slab_taxable_gains, warnings = compute_capital_gains_tax(
-        tax_input.capital_gains, rules["capital_gains"]
-    )
+    if cg_result is None:
+        cg_result = compute_capital_gains_tax(tax_input.capital_gains, rules["capital_gains"])
+    cg_tax, cg_income, slab_taxable_gains, warnings = cg_result
 
     standard_deduction = min(regime_rules["standard_deduction"], tax_input.salary_gross)
     taxable_income = max(
@@ -83,7 +88,8 @@ def _compute_rebate(slab_tax: float, total_income: float, regime_rules: dict) ->
 
 
 def compare_regimes(tax_input: TaxInput, rules: dict) -> ComparisonResult:
-    old_result = compute_regime(tax_input, "old", rules)
-    new_result = compute_regime(tax_input, "new", rules)
+    cg_result = compute_capital_gains_tax(tax_input.capital_gains, rules["capital_gains"])
+    old_result = compute_regime(tax_input, "old", rules, cg_result)
+    new_result = compute_regime(tax_input, "new", rules, cg_result)
     recommended = "old" if old_result.total_tax < new_result.total_tax else "new"
     return ComparisonResult(old=old_result, new=new_result, recommended=recommended)

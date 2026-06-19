@@ -1,12 +1,9 @@
-import json
-from pathlib import Path
-
 import pytest
+from conftest import RULES
 
 from tax_engine.compute_tax import compare_regimes, compute_regime, compute_slab_tax
 from tax_engine.models import AssetClass, CapitalGainEntry, TaxInput
 
-RULES = json.loads((Path(__file__).parent.parent / "rules" / "tax_year_2026_27.json").read_text())
 NEW_SLABS = RULES["new_regime"]["slabs"]
 OLD_SLABS = RULES["old_regime"]["slabs"]
 

@@ -1,12 +1,8 @@
-import json
-from pathlib import Path
-
 import pytest
+from conftest import RULES
 
 from tax_engine.compute_tax import compare_regimes
 from tax_engine.models import AssetClass, CapitalGainEntry, TaxInput
-
-RULES = json.loads((Path(__file__).parent.parent / "rules" / "tax_year_2026_27.json").read_text())
 
 
 def test_scenario_salaried_no_investments_new_regime_wins():

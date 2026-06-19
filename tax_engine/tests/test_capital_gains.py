@@ -1,14 +1,10 @@
-import json
-from pathlib import Path
-
 import pytest
+from conftest import RULES as FULL_RULES
 
 from tax_engine.capital_gains import compute_capital_gains_tax
 from tax_engine.models import AssetClass, CapitalGainEntry
 
-RULES = json.loads((Path(__file__).parent.parent / "rules" / "tax_year_2026_27.json").read_text())[
-    "capital_gains"
-]
+RULES = FULL_RULES["capital_gains"]
 
 
 def test_equity_stcg_taxed_at_20_percent():
