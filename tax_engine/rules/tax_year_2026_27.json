@@ -1,0 +1,47 @@
+{
+  "tax_year": "2026-27",
+  "new_regime": {
+    "slabs": [
+      {"upto": 400000, "rate": 0.0},
+      {"upto": 800000, "rate": 0.05},
+      {"upto": 1200000, "rate": 0.10},
+      {"upto": 1600000, "rate": 0.15},
+      {"upto": 2000000, "rate": 0.20},
+      {"upto": 2400000, "rate": 0.25},
+      {"upto": null, "rate": 0.30}
+    ],
+    "standard_deduction": 75000,
+    "rebate_threshold": 1200000,
+    "rebate_max": 60000,
+    "source_section": "Income-tax Act 2025 sections 202(1) [slabs], 156(2) [rebate], 19(1) Table Sl.No.2(a) [standard deduction]"
+  },
+  "old_regime": {
+    "slabs": [
+      {"upto": 250000, "rate": 0.0},
+      {"upto": 500000, "rate": 0.05},
+      {"upto": 1000000, "rate": 0.20},
+      {"upto": null, "rate": 0.30}
+    ],
+    "standard_deduction": 50000,
+    "rebate_threshold": 500000,
+    "rebate_max": 12500,
+    "deduction_80c_limit": 150000,
+    "deduction_80d_self_limit": 25000,
+    "deduction_80d_senior_limit": 50000,
+    "source_section": "Income-tax Act 2025 sections 156(1) [rebate], 19(1) Table Sl.No.2(b) [standard deduction], 123 [80C-equivalent], 126(2) [80D-equivalent]",
+    "note": "Basic exemption and slab rates (2.5L/5L/10L breakpoints, 5%/20%/30% rates) are not specified in the Act text itself -- it defers rate figures to the annual Finance Act. These values are carried over from established convention and should be reconfirmed against the Finance Act for the relevant year before relying on them for an actual filing."
+  },
+  "capital_gains": {
+    "equity_stt_stcg_rate": 0.20,
+    "equity_stt_ltcg_rate": 0.125,
+    "equity_stt_ltcg_exemption": 125000,
+    "general_ltcg_rate": 0.125,
+    "land_building_grandfather_date": "2024-07-23",
+    "land_building_grandfather_indexed_rate": 0.20,
+    "vda_rate": 0.30,
+    "source_section": "Income-tax Act 2025 sections 196(1) [equity STCG], 198(2) [equity LTCG + 1.25L exemption], 197(1) [general LTCG], 197(3) [land/building grandfathering], 194 Table Sl.No.4 [virtual digital assets]"
+  },
+  "cess_rate": 0.04,
+  "cess_source_section": null,
+  "cess_note": "Health & Education Cess rate is set by the annual Finance Act and is not present in the Act text; 4% is carried over from established convention."
+}
