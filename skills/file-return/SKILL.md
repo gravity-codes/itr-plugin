@@ -76,19 +76,36 @@ output.
      `tax_engine.models.AssetClass` (`EQUITY_STT` for listed equity/equity
      funds/business trust units with STT paid, `GENERAL` for debt
      funds/unlisted shares/other capital assets, `LAND_BUILDING` for real
-     estate, `VDA` for crypto), with `is_long_term` (more than 24 months
-     held), `gain`, and for `LAND_BUILDING` entries acquired before
-     2024-07-23, both `acquired_before_2024_07_23=True` and the
-     indexation-adjusted `indexed_gain`. For `EQUITY_STT` long-term entries
-     acquired before 1 Feb 2018: the `gain` figure itself must already use
-     cost of acquisition = higher of (actual cost, lower of [fair market
-     value as of 31 Jan 2018, sale value]) per s.72(7)/(8) — this is a
-     different mechanism from the land/building rate-grandfathering above
-     (it changes the cost basis, not the tax rate) and `tax_engine` does not
-     recompute it. Most Indian broker tax P&L reports (Zerodha, Groww, etc.)
-     already apply this when they label a line "LTCG" — but ask the user to
-     confirm for any pre-2018 holding rather than assuming the broker number
-     is right.
+     estate, `VDA` for crypto), with `gain`, and `is_long_term` determined
+     by the holding-period threshold for that specific asset type (s.2(101)
+     of the Act) — these thresholds differ and getting this wrong directly
+     changes the tax rate applied:
+     - `EQUITY_STT`: long-term means held **more than 12 months** (not 24 —
+       listed securities and equity-oriented fund units get the shorter
+       threshold under s.2(101)(b)).
+     - `GENERAL` debt mutual funds ("Specified Mutual Fund": >65% debt/money
+       market instruments) acquired on or after 1 April 2023, and unlisted
+       bonds/debentures transferred on or after 23 July 2024: **always**
+       `is_long_term=False` regardless of actual holding period (s.76) — ask
+       the user/check the fund factsheet for the >65% debt threshold rather
+       than assuming every "debt fund" name qualifies.
+     - `GENERAL` for other assets (unlisted shares, etc.) and
+       `LAND_BUILDING`: long-term means held **more than 24 months**.
+
+     For `LAND_BUILDING` entries acquired before 2024-07-23, set both
+     `acquired_before_2024_07_23=True` and the indexation-adjusted
+     `indexed_gain` so `tax_engine` can pick the cheaper of the indexed vs.
+     non-indexed rate (s.197(3)).
+
+     For `EQUITY_STT` long-term entries acquired before 1 Feb 2018: the
+     `gain` figure itself must already use cost of acquisition = higher of
+     (actual cost, lower of [fair market value as of 31 Jan 2018, sale
+     value]) per s.72(7)/(8) — this is a different mechanism from the
+     land/building rate-grandfathering above (it changes the cost basis, not
+     the tax rate) and `tax_engine` does not recompute it. Most Indian
+     broker tax P&L reports (Zerodha, Groww, etc.) already apply this when
+     they label a line "LTCG" — but ask the user to confirm for any
+     pre-2018 holding rather than assuming the broker number is right.
 
    Write the extracted data to `./itr-filing/TY2026-27/extracted-data.json`
    in this directory's working tree (create the directory if needed).

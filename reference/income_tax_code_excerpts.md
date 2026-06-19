@@ -28,6 +28,14 @@ above 24L: 30%.
   Rs. 50,000 each.
 
 ## Capital gains
+- s.2(101): long-term holding-period thresholds differ by asset type —
+  listed securities/equity-oriented fund units/UTI units/zero-coupon bonds:
+  more than 12 months; everything else (unlisted shares, land/building,
+  most debt instruments): more than 24 months.
+- s.76: debt mutual funds ("Specified Mutual Fund," >65% debt/money-market
+  instruments) acquired on or after 1 April 2023, and unlisted
+  bonds/debentures transferred on or after 23 July 2024, are **always**
+  treated as short-term regardless of actual holding period.
 - s.196(1): equity/equity-fund/business-trust-unit STCG with STT paid: 20%.
 - s.198(2): equity/equity-fund/business-trust-unit LTCG with STT paid: 12.5%
   on gains exceeding Rs. 1,25,000 in the year.
