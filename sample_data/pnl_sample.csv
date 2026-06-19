@@ -1,0 +1,59 @@
+# Mock Capital Gains P&L Statement -- Tax Year 2026-27 (FY 2026-27 / AY 2027-28)
+# Generated for itr-filing plugin testing purposes only. Fictional broker, fictional holder.
+# Broker (mock): Zerodha-style "Tax P&L" export format.
+# Holder PAN (placeholder): ABCDE1234F | Holder Name (placeholder): Aarav Sharma
+#
+# Column guide:
+#   Symbol/Description : Security/asset name
+#   Asset Type          : Free-text asset category as the broker labels it
+#   Buy Date / Sell Date: Acquisition / transfer dates (DD-MM-YYYY)
+#   Buy Value / Sell Value : Aggregate cost / sale consideration (Rs.)
+#   Gain/Loss            : Sell Value - Buy Value (Rs.), negative = loss
+#   Long/Short Term       : Broker's own LT/ST label (may differ from tax_engine's
+#                            holding-period rule -- see per-row notes below; the skill
+#                            must apply s.2(101) thresholds itself, not trust this column blindly)
+#   Indexed Gain/Loss     : Only populated for the land/building rows (s.197(3) grandfathering)
+#   Note                  : Maps each row to the AssetClass / is_long_term / flags
+#                            the skill should produce in CapitalGainEntry
+#
+# Row-by-row test intent:
+#  1. Listed equity share, held > 12 months -> EQUITY_STT, is_long_term=True, plain LTCG.
+#  2. Listed equity share, held > 12 months -> EQUITY_STT, is_long_term=True, second LTCG
+#     row so combined LTCG plus row 4 crosses the Rs. 1,25,000 LTCG exemption threshold.
+#  3. Listed equity share, held < 12 months -> EQUITY_STT, is_long_term=False, STCG (15%/20% slab logic).
+#  4. Equity-oriented mutual fund, held > 12 months, LARGE gain (~2,00,000) -> EQUITY_STT,
+#     is_long_term=True. Combined with rows 1-2 this pushes cumulative LTCG well past the
+#     Rs. 1,25,000 exemption so the engine's exemption-threshold branch is exercised.
+#  5. Debt-oriented mutual fund (>65% debt, "Specified Mutual Fund"), bought 12-Jun-2024
+#     (on/after 1-Apr-2023) and held > 12 months by calendar count -> GENERAL, but MUST be
+#     forced is_long_term=False per s.50AA/s.76 regardless of actual holding period. This
+#     is the key "trap" row: a naive holding-period calc would call it long-term; the skill
+#     must override based on the >65% debt / acquisition-date rule.
+#  6. Debt-oriented mutual fund, short holding, LOSS -> GENERAL, is_long_term=False, negative gain
+#     (also exercises the loss / set-off path together with the equity short-term loss in row 7).
+#  7. Listed equity share, held < 12 months, LOSS -> EQUITY_STT, is_long_term=False, negative gain.
+#  8. Unlisted equity share, held > 24 months, acquired BEFORE 23-Jul-2024 -> GENERAL,
+#     is_long_term=True, acquired_before_2024_07_23=True. Indexed gain LOWER than actual
+#     gain (indexation reduces gain) -- exercises the "pick indexed if cheaper" branch
+#     where indexation HELPS the taxpayer.
+#  9. Land (immovable property), held > 24 months, acquired BEFORE 23-Jul-2024 ->
+#     LAND_BUILDING, is_long_term=True, acquired_before_2024_07_23=True. Indexed gain
+#     HIGHER than actual gain (low inflation/cost-base scenario) -- exercises the branch
+#     where indexation does NOT help and the engine should prefer the non-indexed 12.5%
+#     rate over the indexed 20% rate.
+# 10. Virtual Digital Asset (crypto), GAIN -> VDA, flat 30% rate path, no LT/ST distinction.
+# 11. Virtual Digital Asset (crypto), LOSS -> VDA, flat 30% rate path; also tests that VDA
+#     losses are flagged as non-set-off-able (s.115BBH disallows loss set-off) via warnings.
+#
+Symbol/Description,Asset Type,Buy Date,Sell Date,Buy Value,Sell Value,Gain/Loss,Long/Short Term,Indexed Gain/Loss,Note
+Reliance Industries Ltd (500 shares),Listed Equity Share (STT paid),15-04-2024,20-05-2026,612500,745000,132500,Long Term,,EQUITY_STT LTCG holding >12m
+Infosys Ltd (300 shares),Listed Equity Share (STT paid),02-01-2025,18-03-2026,540000,612000,72000,Long Term,,EQUITY_STT LTCG holding >12m (combine with others to cross 1.25L exemption)
+Tata Motors Ltd (800 shares),Listed Equity Share (STT paid),10-09-2025,02-02-2026,468000,421000,-47000,Short Term,,EQUITY_STT STCG holding <12m -- LOSS row
+HDFC Flexi Cap Fund - Direct Growth (Equity MF),Equity Oriented Mutual Fund,05-02-2024,28-04-2026,300000,500000,200000,Long Term,,EQUITY_STT large LTCG holding >12m -- pushes cumulative LTCG past 1.25L exemption
+ICICI Prudential Corporate Bond Fund - Direct Growth (Debt Fund - Specified Mutual Fund >65% debt),Debt Oriented Mutual Fund,12-06-2024,30-04-2026,200000,238000,38000,Long Term (per broker; MUST be treated Short Term per s.50AA/s.76),,GENERAL forced is_long_term=False -- acquired on/after 01-Apr-2023 debt fund trap row
+SBI Magnum Medium Duration Fund - Direct Growth (Debt Fund - Specified Mutual Fund >65% debt),Debt Oriented Mutual Fund,20-01-2026,15-05-2026,150000,141000,-9000,Short Term,,GENERAL is_long_term=False -- LOSS row (debt fund)
+Adani Power Ltd (400 shares),Listed Equity Share (STT paid),08-08-2025,30-01-2026,236000,198000,-38000,Short Term,,EQUITY_STT STCG holding <12m -- second LOSS row
+Bharat Innovations Pvt Ltd (unlisted equity shares - 2000 shares),Unlisted Equity Share,18-03-2021,25-09-2026,400000,950000,550000,Long Term,480000,GENERAL is_long_term=True acquired_before_2024_07_23=True -- indexed gain (Rs 4.8L) LOWER than actual gain (Rs 5.5L); indexation helps taxpayer
+Agricultural-to-Residential Plot - Survey No. 142/3 Wagholi Pune,Land (Immovable Property),12-11-2020,10-10-2026,2500000,5200000,2700000,Long Term,3050000,LAND_BUILDING is_long_term=True acquired_before_2024_07_23=True -- indexed gain (Rs 30.5L) HIGHER than actual gain (Rs 27L); indexation does NOT help so engine should prefer non-indexed 12.5% rate
+Bitcoin (BTC) - 0.05 BTC,Virtual Digital Asset (Crypto),05-05-2025,15-12-2025,180000,265000,85000,N/A (flat rate),,VDA flat 30% rate -- GAIN row (crypto/VDA)
+Ethereum (ETH) - 2.1 ETH,Virtual Digital Asset (Crypto),22-06-2025,10-01-2026,210000,162000,-48000,N/A (flat rate),,VDA flat 30% rate -- LOSS row (crypto/VDA); s.115BBH disallows loss set-off so should surface as warning
