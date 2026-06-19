@@ -17,6 +17,25 @@ Read `reference/income_tax_code_excerpts.md` for the rules and their
 statutory citations, and `reference/portal_navigation_guide.md` for where
 each figure goes on the portal.
 
+### How to actually invoke tax_engine
+
+`tax_engine` is its own `uv`-managed package, separate from the repo root.
+You don't have a persistent Python REPL, so from the repo root run a script
+through that package's environment with:
+
+```bash
+uv run --project tax_engine python <script.py>
+```
+
+Write the script to a temp file under `./itr-filing/TY2026-27/` (e.g.
+`compute.py`), have it read the confirmed `extracted-data.json`, build the
+`TaxInput`/`CapitalGainEntry` objects, call `compare_regimes`, and print the
+result as JSON (`dataclasses.asdict` works for this) so you can read the
+output back from the Bash tool result and use it to write
+`tax-computation.md`. Do not leave stray throwaway scripts lying around —
+delete the temp script (or overwrite it each run) once you've captured its
+output.
+
 ## Flow
 
 1. **Collect documents.** Ask the user for file paths to their Form 16
