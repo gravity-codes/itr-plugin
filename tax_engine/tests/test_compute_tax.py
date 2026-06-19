@@ -107,3 +107,19 @@ def test_old_regime_non_senior_uses_standard_slabs():
     result = compute_regime(tax_input, "old", RULES)
     # taxable = 500000; non-senior slabs: 0 on first 250000, 5% on next 250000 = 12500
     assert result.slab_tax == pytest.approx(12500)
+
+
+def test_balance_payable_is_positive_when_tds_understates_liability():
+    tax_input = TaxInput(salary_gross=1500000, other_income=0, tds_paid=50000)
+    result = compute_regime(tax_input, "new", RULES)
+    assert result.tds_paid == pytest.approx(50000)
+    assert result.balance_payable == pytest.approx(result.total_tax - 50000)
+    assert result.balance_payable > 0
+
+
+def test_balance_payable_is_negative_refund_when_tds_overpays():
+    tax_input = TaxInput(salary_gross=1175000, other_income=0, tds_paid=20000)
+    result = compute_regime(tax_input, "new", RULES)
+    # total_tax is 0 here (fully rebated, see test_new_regime_rebate_full_below_threshold)
+    assert result.total_tax == pytest.approx(0)
+    assert result.balance_payable == pytest.approx(-20000)

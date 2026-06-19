@@ -56,6 +56,8 @@ def compute_regime(tax_input: TaxInput, regime: str, rules: dict) -> RegimeResul
         rebate=rebate,
         cess=cess,
         total_tax=total_tax,
+        tds_paid=tax_input.tds_paid,
+        balance_payable=total_tax - tax_input.tds_paid,
         warnings=warnings,
     )
 

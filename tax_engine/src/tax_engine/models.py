@@ -26,6 +26,7 @@ class TaxInput:
     deductions_80c: float = 0.0
     deductions_80d: float = 0.0
     is_senior_citizen: bool = False
+    tds_paid: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -37,6 +38,8 @@ class RegimeResult:
     rebate: float
     cess: float
     total_tax: float
+    tds_paid: float
+    balance_payable: float
     warnings: list[str] = field(default_factory=list)
 
 

@@ -51,7 +51,9 @@ output.
 
 2. **Extract.** Pull out:
    - From Form 16: gross salary (`salary_gross`), any other taxable income
-     reported, TDS deducted, and the Chapter VI-A deductions the employer
+     reported, TDS deducted (`TaxInput.tds_paid` — also check AIS's "Tax
+     Deducted" section for TDS from non-salary sources, e.g. on bank
+     interest, and add it in), and the Chapter VI-A deductions the employer
      already accounted for (Part B usually itemizes 80C-equivalent and
      80D-equivalent investments the employee declared). Use these as a
      starting point for `deductions_80c` / `deductions_80d`, but always ask
@@ -91,6 +93,10 @@ output.
    Write `./itr-filing/TY2026-27/tax-computation.md` containing:
    - Total income, deductions applied, and tax under each regime.
    - The recommended regime and why (lower `total_tax`).
+   - For the recommended regime: `tds_paid` against `total_tax`, and the
+     resulting `balance_payable` stated plainly as either "additional tax of
+     ₹X is due" (positive) or "refund of ₹X expected" (negative) — this is
+     the number the user actually cares about, not just the gross liability.
    - Every warning returned in `RegimeResult.warnings` (e.g. unset-off
      capital losses) presented clearly to the user.
    - Any AIS-vs-Form16/PnL mismatches you noticed during extraction, listed
