@@ -9,38 +9,53 @@ You help the user compute their income tax and prepare to file ITR-2
 manually on the income tax e-filing portal. You never submit anything to the
 portal yourself — every entry is done by the human.
 
-All tax arithmetic MUST go through the `tax_engine` Python package
-(`tax_engine/src/tax_engine/`). Never compute tax figures yourself by
-reasoning — always call `compare_regimes` from `tax_engine.compute_tax`.
+All tax arithmetic MUST go through the `tax_engine` Python package, bundled
+in this skill's own directory at `./tax_engine/src/tax_engine/`. Never
+compute tax figures yourself by reasoning — always call `compare_regimes`
+from `tax_engine.compute_tax`.
 
-Read `reference/income_tax_code_excerpts.md` for the rules and their
-statutory citations, and `reference/portal_navigation_guide.md` for where
-each figure goes on the portal.
+Read `./reference/income_tax_code_excerpts.md` for the rules and their
+statutory citations, and `./reference/portal_navigation_guide.md` for where
+each figure goes on the portal. Both paths are relative to this skill's own
+directory, not a repo root — this skill is self-contained and has no
+dependency on anything outside its own folder.
 
 ### How to actually invoke tax_engine
 
-`tax_engine` is its own `uv`-managed package, separate from the repo root.
-You don't have a persistent Python REPL, so from the repo root run a script
-through that package's environment with:
+`tax_engine` has zero third-party dependencies, so it runs with a plain
+`python3` interpreter in any environment — no package manager or virtualenv
+setup needed. You don't have a persistent Python REPL, so run a one-off
+script that adds the bundled package to `sys.path`:
 
-```bash
-uv run --project tax_engine python <script.py>
+```python
+import sys
+from pathlib import Path
+
+SKILL_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(SKILL_DIR / "tax_engine" / "src"))
+
+from tax_engine.compute_tax import compare_regimes
+# build TaxInput/CapitalGainEntry from the confirmed figures already in
+# this conversation, call compare_regimes, print the result as JSON
+# (dataclasses.asdict works for this) so you can read it back from the
+# tool result.
 ```
 
-Write the script to a temp file under `./itr-filing/TY2026-27/` (e.g.
-`compute.py`), have it read the confirmed `extracted-data.json`, build the
-`TaxInput`/`CapitalGainEntry` objects, call `compare_regimes`, and print the
-result as JSON (`dataclasses.asdict` works for this) so you can read the
-output back from the Bash tool result and use it to write
-`tax-computation.md`. Do not leave stray throwaway scripts lying around —
-delete the temp script (or overwrite it each run) once you've captured its
+Write this script to a temp file (e.g. `compute.py`) next to wherever you
+have write access in the current environment, run it with
+`python3 compute.py`, read the JSON result back, and use it to produce
+`tax-computation.md`. Don't keep the extracted figures in a separate
+on-disk file between steps — they live in this conversation's context.
+Delete the temp script (or overwrite it each run) once you've captured its
 output.
 
 ## Flow
 
-1. **Collect documents.** Ask the user for file paths to their Form 16
-   (PDF), AIS (PDF or Excel), and one or more broker PnL statements (Excel or
-   CSV). Read each file directly. Also ask directly whether they are a
+1. **Collect documents.** Ask the user to attach/share their Form 16 (PDF),
+   AIS (PDF or Excel), and one or more broker PnL statements (Excel or CSV)
+   in this conversation. Read each attachment directly — don't ask for a
+   local file path, since that doesn't make sense on every platform this
+   skill runs on. Also ask directly whether they are a
    resident senior citizen (age 60 or above as of the end of the tax year)
    — this sets `TaxInput.is_senior_citizen` and changes the old-regime basic
    exemption and 80D cap; don't try to infer it from Form 16, since it
@@ -127,16 +142,25 @@ output.
      (`TaxInput.is_government_employer`) since this changes the deduction
      cap.
 
-   Write the extracted data to `./itr-filing/TY2026-27/extracted-data.json`
-   in this directory's working tree (create the directory if needed).
+   Keep the extracted figures in this conversation's context — don't write
+   them to a separate file between steps. If you're running in an
+   environment with a writable project directory (e.g. Claude Code), you
+   may additionally save a copy to
+   `./itr-filing/TY2026-27/extracted-data.json` for the user's own records,
+   but the confirmation and computation steps below must not depend on that
+   file existing.
 
 3. **Confirm.** Print a table of every extracted figure and ask the user to
    confirm or correct it. Do not proceed to computation until confirmed.
 
 4. **Compute.** Build a `tax_engine.models.TaxInput` from the confirmed data
    and call `tax_engine.compute_tax.compare_regimes(tax_input, rules)` where
-   `rules` is `json.loads(Path("tax_engine/rules/tax_year_2026_27.json").read_text())`.
-   Write `./itr-filing/TY2026-27/tax-computation.md` containing:
+   `rules` is `json.loads(Path("./tax_engine/rules/tax_year_2026_27.json").read_text())`
+   (path relative to this skill's own directory). Produce a
+   `tax-computation.md` deliverable — share it back to the user as a
+   downloadable file in the conversation, and additionally save it to
+   `./itr-filing/TY2026-27/tax-computation.md` if running in an environment
+   with a writable project directory. It must contain:
    - Total income, deductions applied, and tax under each regime.
    - The recommended regime and why (lower `total_tax`).
    - For the recommended regime: `tds_paid` against `total_tax`, and the
@@ -161,10 +185,12 @@ output.
      it yet) and the computed numbers omit that deduction under both
      regimes — don't silently drop it from the report.
 
-5. **Portal checklist.** Using `reference/portal_navigation_guide.md`,
-   write `./itr-filing/TY2026-27/portal-checklist.md` mapping each
-   confirmed figure to its ITR-2 schedule and field, in the recommended
-   regime.
+5. **Portal checklist.** Using `./reference/portal_navigation_guide.md`,
+   produce a `portal-checklist.md` deliverable mapping each confirmed
+   figure to its ITR-2 schedule and field, in the recommended regime —
+   share it back to the user as a downloadable file in the conversation,
+   and additionally save it to `./itr-filing/TY2026-27/portal-checklist.md`
+   if running in an environment with a writable project directory.
 
 ## Hard rules
 
