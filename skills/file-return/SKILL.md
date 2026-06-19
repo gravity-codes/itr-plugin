@@ -25,37 +25,64 @@ dependency on anything outside its own folder.
 `tax_engine` has zero third-party dependencies, so it runs with a plain
 `python3` interpreter in any environment — no package manager or virtualenv
 setup needed. You don't have a persistent Python REPL, so run a one-off
-script that adds the bundled package to `sys.path`:
+script. You already know this skill's own absolute directory (it's where
+you read this SKILL.md from) — hardcode *that* absolute path as `SKILL_DIR`
+in the script, rather than deriving it from `__file__`, since the script
+itself may be written to a different, unrelated directory:
 
 ```python
 import sys
 from pathlib import Path
 
-SKILL_DIR = Path(__file__).resolve().parent
+SKILL_DIR = Path("/absolute/path/to/skills/file-return")  # substitute the real path
 sys.path.insert(0, str(SKILL_DIR / "tax_engine" / "src"))
 
 from tax_engine.compute_tax import compare_regimes
-# build TaxInput/CapitalGainEntry from the confirmed figures already in
-# this conversation, call compare_regimes, print the result as JSON
-# (dataclasses.asdict works for this) so you can read it back from the
-# tool result.
+from tax_engine.models import TaxInput, CapitalGainEntry
+import json
+
+rules = json.loads((SKILL_DIR / "tax_engine" / "rules" / "tax_year_2026_27.json").read_text())
+
+# Write the actual confirmed values as literal arguments here — this script
+# is a subprocess with no access to the conversation, so the figures must
+# be embedded as real numbers/strings in the source you generate, not left
+# as a placeholder or comment:
+tax_input = TaxInput(salary_gross=1234567, other_income=0, ...)
+
+import dataclasses
+result = compare_regimes(tax_input, rules)
+print(json.dumps(dataclasses.asdict(result), default=str))
 ```
 
 Write this script to a temp file (e.g. `compute.py`) next to wherever you
-have write access in the current environment, run it with
-`python3 compute.py`, read the JSON result back, and use it to produce
-`tax-computation.md`. Don't keep the extracted figures in a separate
-on-disk file between steps — they live in this conversation's context.
-Delete the temp script (or overwrite it each run) once you've captured its
-output.
+have write access in the current environment — it does not need to be
+inside the skill directory, since `SKILL_DIR` above is a hardcoded absolute
+path, not a relative one. Run it with `python3 compute.py`, read the JSON
+result back, and use it to produce `tax-computation.md`. Don't keep the
+extracted figures in a separate on-disk file between steps — they live in
+this conversation's context, and you embed them directly into the script
+each time you generate it. Delete the temp script (or overwrite it each
+run) once you've captured its output.
+
+### Output handling
+
+`tax-computation.md` and `portal-checklist.md` are produced by you (not by
+`tax_engine`) from the JSON the script above prints. Deliver each one back
+to the user as a chat message containing the full markdown content. If
+you're running in an environment with a writable project directory (e.g.
+Claude Code), additionally save a copy to `./itr-filing/TY2026-27/<name>`
+relative to the user's current working directory, as a convenience — but
+never depend on that file existing, since it won't on platforms without one.
 
 ## Flow
 
-1. **Collect documents.** Ask the user to attach/share their Form 16 (PDF),
-   AIS (PDF or Excel), and one or more broker PnL statements (Excel or CSV)
-   in this conversation. Read each attachment directly — don't ask for a
-   local file path, since that doesn't make sense on every platform this
-   skill runs on. Also ask directly whether they are a
+1. **Collect documents.** Ask the user for their Form 16 (PDF), AIS (PDF or
+   Excel), and one or more broker PnL statements (Excel or CSV) — either as
+   a local file path (e.g. in Claude Code, where that's the natural way to
+   hand over a file) or as an attachment in this conversation (e.g. in
+   Claude Desktop/claude.ai, where there's no local path to give). Accept
+   whichever the user offers and read it directly. Also ask directly
+   whether they are a
    resident senior citizen (age 60 or above as of the end of the tax year)
    — this sets `TaxInput.is_senior_citizen` and changes the old-regime basic
    exemption and 80D cap; don't try to infer it from Form 16, since it
@@ -143,24 +170,18 @@ output.
      cap.
 
    Keep the extracted figures in this conversation's context — don't write
-   them to a separate file between steps. If you're running in an
-   environment with a writable project directory (e.g. Claude Code), you
-   may additionally save a copy to
-   `./itr-filing/TY2026-27/extracted-data.json` for the user's own records,
-   but the confirmation and computation steps below must not depend on that
-   file existing.
+   them to a separate file between steps; see "Output handling" above for
+   when an optional on-disk copy makes sense.
 
 3. **Confirm.** Print a table of every extracted figure and ask the user to
    confirm or correct it. Do not proceed to computation until confirmed.
 
 4. **Compute.** Build a `tax_engine.models.TaxInput` from the confirmed data
-   and call `tax_engine.compute_tax.compare_regimes(tax_input, rules)` where
-   `rules` is `json.loads(Path("./tax_engine/rules/tax_year_2026_27.json").read_text())`
-   (path relative to this skill's own directory). Produce a
-   `tax-computation.md` deliverable — share it back to the user as a
-   downloadable file in the conversation, and additionally save it to
-   `./itr-filing/TY2026-27/tax-computation.md` if running in an environment
-   with a writable project directory. It must contain:
+   and call `tax_engine.compute_tax.compare_regimes(tax_input, rules)` as
+   shown in "How to actually invoke tax_engine" above (`rules` loaded from
+   `SKILL_DIR / "tax_engine" / "rules" / "tax_year_2026_27.json"`). Produce
+   a `tax-computation.md` deliverable per "Output handling" above. It must
+   contain:
    - Total income, deductions applied, and tax under each regime.
    - The recommended regime and why (lower `total_tax`).
    - For the recommended regime: `tds_paid` against `total_tax`, and the
@@ -186,11 +207,9 @@ output.
      regimes — don't silently drop it from the report.
 
 5. **Portal checklist.** Using `./reference/portal_navigation_guide.md`,
-   produce a `portal-checklist.md` deliverable mapping each confirmed
-   figure to its ITR-2 schedule and field, in the recommended regime —
-   share it back to the user as a downloadable file in the conversation,
-   and additionally save it to `./itr-filing/TY2026-27/portal-checklist.md`
-   if running in an environment with a writable project directory.
+   produce a `portal-checklist.md` deliverable (per "Output handling"
+   above) mapping each confirmed figure to its ITR-2 schedule and field, in
+   the recommended regime.
 
 ## Hard rules
 

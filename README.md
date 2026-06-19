@@ -84,9 +84,11 @@ Team, Enterprise).
   user → compute → write the portal checklist.
 - `skills/file-return/tax_engine/` — a standalone, dependency-free Python
   package that does all tax arithmetic deterministically: slabs, surcharge,
-  capital gains, house property, and regime comparison. The skill calls
-  into it (via plain `python3`, no package manager needed) rather than
-  reasoning about tax math itself.
+  capital gains, house property, and regime comparison. The skill invokes
+  it with a plain `python3` interpreter (no package manager needed *to run
+  it*) rather than reasoning about tax math itself — the `pyproject.toml`/
+  `uv.lock` alongside it are only for the engine's own dev workflow (tests,
+  linting), not a runtime requirement.
 - `skills/file-return/reference/income_tax_code_excerpts.md` — the
   statutory rules and citations (Income-tax Act, 2025) backing every
   computation.
