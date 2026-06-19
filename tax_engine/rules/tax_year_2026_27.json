@@ -13,6 +13,7 @@
     "standard_deduction": 75000,
     "rebate_threshold": 1200000,
     "rebate_max": 60000,
+    "rebate_has_marginal_relief": true,
     "source_section": "Income-tax Act 2025 sections 202(1) [slabs], 156(2) [rebate], 19(1) Table Sl.No.2(a) [standard deduction]"
   },
   "old_regime": {
@@ -31,6 +32,7 @@
     "standard_deduction": 50000,
     "rebate_threshold": 500000,
     "rebate_max": 12500,
+    "rebate_has_marginal_relief": false,
     "deduction_80c_limit": 150000,
     "deduction_80d_self_limit": 25000,
     "deduction_80d_senior_limit": 50000,

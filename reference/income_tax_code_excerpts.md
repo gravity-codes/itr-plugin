@@ -9,12 +9,16 @@ Tax Year 2026-27.
 - Old regime: Rs. 50,000 or salary, whichever is less.
 
 ## Rebates (Chapter IX)
-- s.156(1): resident individuals with total income <= Rs. 5,00,000 get a
-  rebate of 100% of tax or Rs. 12,500, whichever is less.
-- s.156(2): resident individuals taxed under the new regime (s.202(1)) with
-  total income <= Rs. 12,00,000 get a rebate of 100% of tax or Rs. 60,000,
+- s.156(1) (old regime): resident individuals with total income <=
+  Rs. 5,00,000 get a rebate of 100% of tax or Rs. 12,500, whichever is less.
+  **There is no marginal-relief clause for the old regime** — above
+  Rs. 5,00,000 the rebate is exactly zero, a hard cliff, not a phase-out.
+- s.156(2) (new regime only, s.202(1)): resident individuals with total
+  income <= Rs. 12,00,000 get a rebate of 100% of tax or Rs. 60,000,
   whichever is less; above that, marginal relief caps the net tax at the
-  amount by which income exceeds Rs. 12,00,000.
+  amount by which income exceeds Rs. 12,00,000. This marginal-relief clause
+  exists only in s.156(2), not s.156(1) — `rebate_has_marginal_relief` in
+  the rules JSON encodes this difference.
 
 ## New regime slabs (s.202(1))
 0-4L: nil, 4-8L: 5%, 8-12L: 10%, 12-16L: 15%, 16-20L: 20%, 20-24L: 25%,

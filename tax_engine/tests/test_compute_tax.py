@@ -123,3 +123,14 @@ def test_balance_payable_is_negative_refund_when_tds_overpays():
     # total_tax is 0 here (fully rebated, see test_new_regime_rebate_full_below_threshold)
     assert result.total_tax == pytest.approx(0)
     assert result.balance_payable == pytest.approx(-20000)
+
+
+def test_old_regime_rebate_is_a_hard_cliff_with_no_marginal_relief():
+    # s.156(1) (old regime) has no marginal-relief clause, unlike s.156(2) (new
+    # regime). Just above the 5L threshold, the rebate must drop to zero
+    # outright rather than phasing out -- a taxpayer here gets no rebate at all.
+    tax_input = TaxInput(salary_gross=560000, other_income=0)
+    result = compute_regime(tax_input, "old", RULES)
+    assert result.taxable_income_at_slab == pytest.approx(510000)
+    assert result.rebate == pytest.approx(0)
+    assert result.slab_tax == pytest.approx(14500)

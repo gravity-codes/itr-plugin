@@ -72,6 +72,10 @@ def _compute_rebate(slab_tax: float, total_income: float, regime_rules: dict) ->
     if total_income <= threshold:
         return min(slab_tax, max_rebate)
 
+    if not regime_rules["rebate_has_marginal_relief"]:
+        # e.g. old regime (s.156(1)): hard cliff, no rebate at all above the threshold.
+        return 0.0
+
     excess_income = total_income - threshold
     if slab_tax > excess_income:
         return slab_tax - excess_income
