@@ -1,0 +1,6 @@
+{
+  "name": "itr-filing",
+  "version": "0.1.0",
+  "description": "Helps Indian taxpayers compute income tax from Form 16, AIS, and PnL statements, and generates an ITR-2 portal entry checklist.",
+  "skills": ["skills/file-return"]
+}
