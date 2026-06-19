@@ -1,5 +1,10 @@
 # itr-filing
 
+> **Disclaimer:** This is not a financial product and not professional tax
+> advice. It is a reference tool only — the computations may be wrong.
+> Always consult a Chartered Accountant before filing or relying on any
+> figure produced here.
+
 A Claude Code plugin that helps Indian taxpayers compute their income tax
 and prepare an ITR-2 filing — from raw documents to a portal-entry
 checklist. It never submits anything to the income tax portal; every entry
