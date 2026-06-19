@@ -102,6 +102,11 @@ output.
    - Any AIS-vs-Form16/PnL mismatches you noticed during extraction, listed
      explicitly — never silently reconcile these; ask the user to resolve
      them.
+   - If Form 16 shows an employer NPS contribution deduction or Agniveer
+     Corpus Fund contribution, flag explicitly that `tax_engine` v1 doesn't
+     model these (no `TaxInput` field exists for them yet) and the computed
+     numbers omit that deduction under both regimes — don't silently drop it
+     from the report.
 
 5. **Portal checklist.** Using `reference/portal_navigation_guide.md`,
    write `./itr-filing/TY2026-27/portal-checklist.md` mapping each

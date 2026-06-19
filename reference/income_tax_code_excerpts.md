@@ -68,3 +68,11 @@ for the filing year before relying on this for a real filing.
   ambiguity in how the rebate interacts with special-rate capital gains.
 - No surcharge computation (relevant only above Rs. 50 lakh total income).
   Flag to the user if their income exceeds that threshold.
+- Employer/government pension-scheme contributions deductible under s.124(1),
+  124(2), 125(2), and 146 are the only Chapter VIII items s.202(2)(a)(xii)
+  still allows under the *new* regime (per s.202(2)(a)(xii) itself) — but
+  `TaxInput` has no field for them, so they're omitted from both regimes'
+  computations, not just the new regime's. This understates deductions
+  equally for both regimes rather than skewing the old-vs-new comparison;
+  flag it to users who have such contributions rather than silently omitting
+  it from the report.
