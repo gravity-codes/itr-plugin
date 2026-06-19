@@ -51,7 +51,16 @@ output.
 
 2. **Extract.** Pull out:
    - From Form 16: gross salary (`salary_gross`), any other taxable income
-     reported, TDS deducted.
+     reported, TDS deducted, and the Chapter VI-A deductions the employer
+     already accounted for (Part B usually itemizes 80C-equivalent and
+     80D-equivalent investments the employee declared). Use these as a
+     starting point for `deductions_80c` / `deductions_80d`, but always ask
+     the user to confirm — actual investments for the full tax year often
+     differ from what was declared to the employer mid-year (e.g. ELSS/PPF
+     contributed after the declaration, or health insurance bought later).
+     These two deduction fields only matter for the old-regime comparison —
+     ask even if the user expects the new regime to win, since that's
+     exactly the comparison this skill exists to make.
    - From AIS: every income head reported (salary, interest, dividends,
      securities transactions) — used only for cross-checking, not for the
      computation itself.
