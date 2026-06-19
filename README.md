@@ -1,4 +1,4 @@
-# ITR Filing Assistant for Indian Income Tax (Claude Code Plugin)
+# ITR Filing Assistant for Indian Income Tax (Claude Code & Claude Desktop)
 
 > **Disclaimer:** This is not a financial product and not professional tax
 > advice. It is a reference tool only — the computations may be wrong.
