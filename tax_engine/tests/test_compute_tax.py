@@ -92,3 +92,18 @@ def test_compare_regimes_no_deductions_favors_new():
     comparison = compare_regimes(tax_input, RULES)
     # with zero deductions claimed, new regime's lower slabs should win
     assert comparison.recommended == "new"
+
+
+def test_old_regime_senior_citizen_gets_raised_basic_exemption():
+    tax_input = TaxInput(salary_gross=550000, other_income=0, is_senior_citizen=True)
+    result = compute_regime(tax_input, "old", RULES)
+    # taxable = 550000 - 50000 std deduction = 500000
+    # senior slabs: 0 on first 300000, 5% on next 200000 = 10000 (vs 12500 on non-senior slabs)
+    assert result.slab_tax == pytest.approx(10000)
+
+
+def test_old_regime_non_senior_uses_standard_slabs():
+    tax_input = TaxInput(salary_gross=550000, other_income=0, is_senior_citizen=False)
+    result = compute_regime(tax_input, "old", RULES)
+    # taxable = 500000; non-senior slabs: 0 on first 250000, 5% on next 250000 = 12500
+    assert result.slab_tax == pytest.approx(12500)

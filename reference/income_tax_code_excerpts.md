@@ -44,8 +44,13 @@ above 24L: 30%.
 Not specified in the Act text — it defers these to the annual Finance Act.
 This plugin uses the established-convention figures (Rs. 2,50,000 basic
 exemption; 5%/20%/30% slabs at Rs. 5L/Rs. 10L breakpoints) recorded in
-`tax_engine/rules/tax_year_2026_27.json`. Reconfirm against the actual
-Finance Act for the filing year before relying on this for a real filing.
+`tax_engine/rules/tax_year_2026_27.json`. Resident senior citizens (60+) get
+a raised Rs. 3,00,000 basic exemption under the old regime
+(`slabs_senior_citizen` in the rules file) — selected automatically when
+`TaxInput.is_senior_citizen=True`. Super-senior citizens (80+) get a further
+raise in real practice but that age tier is out of scope for v1 — there's no
+separate flag for it. Reconfirm all of these against the actual Finance Act
+for the filing year before relying on this for a real filing.
 
 ## Known v1 simplifications
 - No cross-bucket capital-loss set-off (e.g. a short-term equity loss is not

@@ -34,7 +34,11 @@ def compute_regime(tax_input: TaxInput, regime: str, rules: dict) -> RegimeResul
         deduction_80d = min(tax_input.deductions_80d, d80d_limit)
         taxable_income = max(0.0, taxable_income - deduction_80c - deduction_80d)
 
-    slab_tax = compute_slab_tax(taxable_income, regime_rules["slabs"])
+    if regime == "old" and tax_input.is_senior_citizen:
+        slabs = regime_rules["slabs_senior_citizen"]
+    else:
+        slabs = regime_rules["slabs"]
+    slab_tax = compute_slab_tax(taxable_income, slabs)
 
     total_income_for_rebate_check = taxable_income + cg_income
     rebate = _compute_rebate(slab_tax, total_income_for_rebate_check, regime_rules)
