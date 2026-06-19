@@ -44,6 +44,13 @@ above 24L: 30%.
 - s.194 Table Sl.No.4: virtual digital assets (crypto): flat 30%, only cost
   of acquisition is deductible, losses cannot be set off against any other
   income and cannot be carried forward.
+- s.72(7)/(8): equity/equity-fund/business-trust-unit LTCG assets acquired
+  before 1 Feb 2018 get a grandfathered *cost basis* — higher of actual
+  cost, or the lower of (fair market value as of 31 Jan 2018, sale value).
+  This changes the `gain` figure that must be extracted from the PnL
+  statement *before* it reaches `tax_engine` (which never recomputes cost
+  basis); it is a distinct mechanism from the land/building rate-choice
+  grandfathering in s.197(3) above.
 
 ## Old-regime basic exemption and slab rates
 Not specified in the Act text — it defers these to the annual Finance Act.

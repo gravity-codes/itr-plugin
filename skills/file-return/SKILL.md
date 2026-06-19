@@ -79,7 +79,16 @@ output.
      estate, `VDA` for crypto), with `is_long_term` (more than 24 months
      held), `gain`, and for `LAND_BUILDING` entries acquired before
      2024-07-23, both `acquired_before_2024_07_23=True` and the
-     indexation-adjusted `indexed_gain`.
+     indexation-adjusted `indexed_gain`. For `EQUITY_STT` long-term entries
+     acquired before 1 Feb 2018: the `gain` figure itself must already use
+     cost of acquisition = higher of (actual cost, lower of [fair market
+     value as of 31 Jan 2018, sale value]) per s.72(7)/(8) — this is a
+     different mechanism from the land/building rate-grandfathering above
+     (it changes the cost basis, not the tax rate) and `tax_engine` does not
+     recompute it. Most Indian broker tax P&L reports (Zerodha, Groww, etc.)
+     already apply this when they label a line "LTCG" — but ask the user to
+     confirm for any pre-2018 holding rather than assuming the broker number
+     is right.
 
    Write the extracted data to `./itr-filing/TY2026-27/extracted-data.json`
    in this directory's working tree (create the directory if needed).
