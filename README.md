@@ -1,4 +1,4 @@
-# itr-filing
+# ITR Filing Assistant for Indian Income Tax (Claude Code Plugin)
 
 > **Disclaimer:** This is not a financial product and not professional tax
 > advice. It is a reference tool only — the computations may be wrong.
@@ -49,6 +49,18 @@ is made by the human, this just does the math and tells you where it goes.
   (regime comparison, recommended regime, tax due/refund, surcharge,
   warnings) and a `portal-checklist.md` mapping every confirmed figure to
   its exact ITR-2 schedule and field on the e-filing portal.
+
+## Installation
+
+This repo is itself a Claude Code plugin marketplace. In Claude Code, run:
+
+```
+/plugin marketplace add gravity-codes/itr-plugin
+/plugin install itr-filing@itr-plugin
+```
+
+Then start a conversation and ask to file your ITR — Claude will use the
+`file-return` skill automatically.
 
 ## How it works
 

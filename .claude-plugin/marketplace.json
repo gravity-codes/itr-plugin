@@ -1,0 +1,13 @@
+{
+  "name": "itr-plugin",
+  "owner": {
+    "name": "gravity-codes"
+  },
+  "plugins": [
+    {
+      "name": "itr-filing",
+      "source": ".",
+      "description": "Helps Indian taxpayers compute income tax from Form 16, AIS, and PnL statements, and generates an ITR-2 portal entry checklist."
+    }
+  ]
+}
