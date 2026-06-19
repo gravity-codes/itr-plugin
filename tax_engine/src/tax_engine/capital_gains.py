@@ -11,7 +11,9 @@ def compute_capital_gains_tax(
     for asset_class in AssetClass:
         for is_long_term in (True, False):
             bucket = [
-                e for e in entries if e.asset_class == asset_class and e.is_long_term == is_long_term
+                e
+                for e in entries
+                if e.asset_class == asset_class and e.is_long_term == is_long_term
             ]
             if not bucket:
                 continue

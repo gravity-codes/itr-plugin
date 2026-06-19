@@ -3,12 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from tax_engine.compute_tax import compute_regime, compute_slab_tax
+from tax_engine.compute_tax import compare_regimes, compute_regime, compute_slab_tax
 from tax_engine.models import AssetClass, CapitalGainEntry, TaxInput
 
-RULES = json.loads(
-    (Path(__file__).parent.parent / "rules" / "tax_year_2026_27.json").read_text()
-)
+RULES = json.loads((Path(__file__).parent.parent / "rules" / "tax_year_2026_27.json").read_text())
 NEW_SLABS = RULES["new_regime"]["slabs"]
 OLD_SLABS = RULES["old_regime"]["slabs"]
 
@@ -75,3 +73,22 @@ def test_capital_gains_tax_added_and_not_rebated():
     # slab tax fully rebated (as in first test); capital gains tax (50000*20%=10000) is not rebated
     assert result.capital_gains_tax == pytest.approx(10000)
     assert result.total_tax == pytest.approx(10000 * 1.04)
+
+
+def test_compare_regimes_recommends_lower_tax():
+    tax_input = TaxInput(
+        salary_gross=1800000, other_income=0, deductions_80c=150000, deductions_80d=25000
+    )
+    comparison = compare_regimes(tax_input, RULES)
+    assert comparison.recommended in ("old", "new")
+    cheaper = (
+        comparison.old if comparison.old.total_tax <= comparison.new.total_tax else comparison.new
+    )
+    assert comparison.recommended == cheaper.regime
+
+
+def test_compare_regimes_no_deductions_favors_new():
+    tax_input = TaxInput(salary_gross=1500000, other_income=0)
+    comparison = compare_regimes(tax_input, RULES)
+    # with zero deductions claimed, new regime's lower slabs should win
+    assert comparison.recommended == "new"
