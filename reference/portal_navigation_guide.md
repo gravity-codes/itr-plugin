@@ -25,10 +25,16 @@ use this guide to manually enter values yourself.
   Rs. 1,25,000 exemption automatically.
 - Schedule CG -> "Other long-term assets (debt funds, unlisted shares)" ->
   sum of `GENERAL` entries with `is_long_term=True`.
-- Schedule CG -> "Land or building" -> sum of `LAND_BUILDING` entries; if any
-  were acquired before 23 July 2024, the portal will ask whether you want
-  indexed or non-indexed computation — use whichever this plugin's
-  `capital_gains_tax` output selected as cheaper for that entry.
+- Schedule CG -> "Land or building" (long-term only) -> sum of
+  `LAND_BUILDING` entries with `is_long_term=True`; if any were acquired
+  before 23 July 2024, the portal will ask whether you want indexed or
+  non-indexed computation — use whichever this plugin's `capital_gains_tax`
+  output selected as cheaper for that entry.
+- Short-term `GENERAL` or `LAND_BUILDING` entries are **not** entered in
+  Schedule CG's special-rate rows — there is no special rate for them. Add
+  them into Schedule OS / the regular income computation instead, since
+  this plugin folds them into ordinary slab-taxed income
+  (`taxable_income_at_slab`), not `capital_gains_tax`.
 - Schedule VDA -> enter each `VDA` gain entry separately; the portal does not
   allow netting VDA losses against gains or other income — enter losses for
   disclosure only, expect no tax benefit from them.

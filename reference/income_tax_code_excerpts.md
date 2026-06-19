@@ -36,6 +36,11 @@ above 24L: 30%.
 - s.197(3): land/building acquired before 23 July 2024 — taxpayer gets the
   lower of (a) 12.5% on the gain without indexation, or (b) 20% on the gain
   computed with indexation.
+- Short-term gains on non-equity-STT assets (debt funds, unlisted shares,
+  land/building held under 24 months) have **no special rate** in the Act —
+  there is no equivalent to s.196 for them. They are ordinary income, added
+  to the slab-taxed total and charged at whatever bracket the taxpayer falls
+  into (0%-30%), not a flat rate.
 - s.194 Table Sl.No.4: virtual digital assets (crypto): flat 30%, only cost
   of acquisition is deductible, losses cannot be set off against any other
   income and cannot be carried forward.

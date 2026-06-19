@@ -81,3 +81,23 @@ def test_scenario_zero_income_produces_zero_tax():
     result = compare_regimes(tax_input, RULES)
     assert result.old.total_tax == 0
     assert result.new.total_tax == 0
+
+
+def test_scenario_unlisted_share_stcg_taxed_at_slab_not_flat_rate():
+    # Selling unlisted shares held under 24 months has no special rate in
+    # the Act -- it's ordinary slab-taxed income. A taxpayer already in the
+    # 30% bracket should pay 30% on this gain, not the 12.5% LTCG rate.
+    high_earner = TaxInput(
+        salary_gross=3000000,
+        other_income=0,
+        capital_gains=[
+            CapitalGainEntry(asset_class=AssetClass.GENERAL, is_long_term=False, gain=100000)
+        ],
+    )
+    baseline = TaxInput(salary_gross=3000000, other_income=0)
+    with_gain = compare_regimes(high_earner, RULES)
+    without_gain = compare_regimes(baseline, RULES)
+    # the marginal tax on this 100000 should be ~30% (+4% cess) of slab tax, not a flat 12.5%
+    marginal_tax = with_gain.new.total_tax - without_gain.new.total_tax
+    assert marginal_tax == pytest.approx(100000 * 0.30 * 1.04)
+    assert with_gain.new.capital_gains_tax == pytest.approx(0)

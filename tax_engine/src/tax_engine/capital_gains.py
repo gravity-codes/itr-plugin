@@ -3,10 +3,21 @@ from tax_engine.models import AssetClass, CapitalGainEntry
 
 def compute_capital_gains_tax(
     entries: list[CapitalGainEntry], rules: dict
-) -> tuple[float, float, list[str]]:
+) -> tuple[float, float, float, list[str]]:
+    """Returns (special_rate_tax, special_rate_income, slab_taxable_gains, warnings).
+
+    `special_rate_tax`/`special_rate_income` cover gains that have a dedicated
+    rate under the Act (equity STT STCG/LTCG, general/land-building LTCG, VDA).
+    `slab_taxable_gains` covers short-term gains on non-equity-STT assets
+    (debt funds, unlisted shares, land/building held under 24 months), which
+    the Act gives no special rate for -- they're ordinary income taxed at
+    slab rates, so the caller must add this into taxable income rather than
+    treating it as part of the capital-gains tax liability.
+    """
     warnings: list[str] = []
-    total_tax = 0.0
-    total_income = 0.0
+    special_rate_tax = 0.0
+    special_rate_income = 0.0
+    slab_taxable_gains = 0.0
 
     for asset_class in AssetClass:
         for is_long_term in (True, False):
@@ -27,8 +38,8 @@ def compute_capital_gains_tax(
                             "and cannot be carried forward (Income-tax Act 2025, s.194 Table Sl.No.4)."
                         )
                         continue
-                    total_income += entry.gain
-                    total_tax += entry.gain * rules["vda_rate"]
+                    special_rate_income += entry.gain
+                    special_rate_tax += entry.gain * rules["vda_rate"]
                 continue
 
             net_gain = sum(e.gain for e in bucket)
@@ -43,19 +54,24 @@ def compute_capital_gains_tax(
 
             if asset_class == AssetClass.EQUITY_STT and is_long_term:
                 taxable = max(0.0, net_gain - rules["equity_stt_ltcg_exemption"])
-                total_income += net_gain
-                total_tax += taxable * rules["equity_stt_ltcg_rate"]
+                special_rate_income += net_gain
+                special_rate_tax += taxable * rules["equity_stt_ltcg_rate"]
             elif asset_class == AssetClass.EQUITY_STT and not is_long_term:
-                total_income += net_gain
-                total_tax += net_gain * rules["equity_stt_stcg_rate"]
+                special_rate_income += net_gain
+                special_rate_tax += net_gain * rules["equity_stt_stcg_rate"]
             elif asset_class == AssetClass.LAND_BUILDING and is_long_term:
-                total_income += net_gain
-                total_tax += _land_building_tax(bucket, rules)
+                special_rate_income += net_gain
+                special_rate_tax += _land_building_tax(bucket, rules)
+            elif is_long_term:
+                # GENERAL long-term (debt funds, unlisted shares held 24+ months): s.197.
+                special_rate_income += net_gain
+                special_rate_tax += net_gain * rules["general_ltcg_rate"]
             else:
-                total_income += net_gain
-                total_tax += net_gain * rules["general_ltcg_rate"]
+                # GENERAL or LAND_BUILDING short-term: no special rate in the Act --
+                # ordinary income taxed at slab rates.
+                slab_taxable_gains += net_gain
 
-    return total_tax, total_income, warnings
+    return special_rate_tax, special_rate_income, slab_taxable_gains, warnings
 
 
 def _land_building_tax(bucket: list[CapitalGainEntry], rules: dict) -> float:

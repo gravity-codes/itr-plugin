@@ -17,12 +17,15 @@ def compute_slab_tax(taxable_income: float, slabs: list[dict]) -> float:
 
 def compute_regime(tax_input: TaxInput, regime: str, rules: dict) -> RegimeResult:
     regime_rules = rules[f"{regime}_regime"]
-    cg_tax, cg_income, warnings = compute_capital_gains_tax(
+    cg_tax, cg_income, slab_taxable_gains, warnings = compute_capital_gains_tax(
         tax_input.capital_gains, rules["capital_gains"]
     )
 
     standard_deduction = min(regime_rules["standard_deduction"], tax_input.salary_gross)
-    taxable_income = max(0.0, tax_input.salary_gross - standard_deduction + tax_input.other_income)
+    taxable_income = max(
+        0.0,
+        tax_input.salary_gross - standard_deduction + tax_input.other_income + slab_taxable_gains,
+    )
 
     if regime == "old":
         deduction_80c = min(tax_input.deductions_80c, regime_rules["deduction_80c_limit"])
